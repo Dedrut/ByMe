@@ -26,17 +26,28 @@
                 <li class="nav-item">
                    <a class="nav-link" href="contact.html">Contact</a>
                 </li>
-                <li class="nav-item">
-                   <a class="nav-link btn-primary" href="contact.html" id="logincss">Login</a>
-                </li>
-                <li class="nav-item">
-                   <a class="nav-link btn-primary" href="contact.html">Register</a>
-                </li>
                 <form class="form-inline">
-                   <button class="btn  my-2 my-sm-0 nav_search-btn" type="submit">
-                   <i class="fa fa-search" aria-hidden="true"></i>
-                   </button>
-                </form>
+                  <button class="btn  my-2 my-sm-0 nav_search-btn" type="submit">
+                  <i class="fa fa-search" aria-hidden="true"></i>
+                  </button>
+               </form>
+               @if (Route::has('login'))
+
+               @auth
+                <li class="nav-item">
+                  <x-app-layout>
+
+                  </x-app-layout>
+                </li>
+                @else
+                <li class="nav-item">
+                   <a class="nav-link btn-primary" href="{{ route('login') }}" id="logincss">Login</a>
+                </li>
+                <li class="nav-item">
+                   <a class="nav-link btn-primary" href="{{ route('register') }}">Register</a>
+                  </li>
+               @endauth
+               @endif
              </ul>
           </div>
        </nav>
