@@ -8,7 +8,7 @@
       <!-- partial:partials/_sidebar.html -->
       @include('admin.sidebar')
       <!-- partial -->
-      @include('admin.dashboard')
+      @include('admin.header')
         <!-- partial -->
     @include('admin.body')
     <!-- container-scroller -->
