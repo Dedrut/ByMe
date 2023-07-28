@@ -28,7 +28,7 @@
       <!-- partial:partials/_sidebar.html -->
       @include('admin.sidebar')
       <!-- partial -->
-      @include('admin.dashboard')
+      @include('admin.header')
         <!-- partial -->
       <div class="main-panel">
         <div class="content-wrapper">
@@ -41,7 +41,7 @@
           @endif
 
           <div class="div_center">
-            <h2 class="h2_font">Add category</h2>
+            <h2 class="h2_font">Tambahkan Kategori</h2>
             <form action="{{ url('/add_category') }}" method="POST">
                 @csrf
               <input class="input_color" type="text" name="category" placeholder="Write Category Name">
@@ -51,13 +51,13 @@
 
           <table class="center">
             <tr>
-              <td>Category Name</td>
-              <td>Action</td>
+              <td>Nama kategori</td>
+              <td>Aksi</td>
             </tr>
             @foreach($data as $data)
             <tr>
               <td>{{ $data->category_name }}</td>
-              <td><a onclick="return confirm('Are you sure to delete this Category?')" class="btn btn-danger" href="{{ url('delete_category', $data->id) }}">delete</a></td>
+              <td><a onclick="return confirm('Apakah kamu yakin ingin menghapus kategori ini?')" class="btn btn-danger" href="{{ url('delete_category', $data->id) }}">Hapus</a></td>
             </tr>
             @endforeach
           </table>

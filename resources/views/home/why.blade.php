@@ -2,7 +2,7 @@
     <div class="container">
        <div class="heading_container heading_center">
           <h2>
-             Why Shop With Us
+             Mengapa Beli Di ByMe
           </h2>
        </div>
        <div class="row">
@@ -97,10 +97,10 @@
                 </div>
                 <div class="detail-box">
                    <h5>
-                      Fast Delivery
+                      Pengiriman Cepat
                    </h5>
                    <p>
-                      variations of passages of Lorem Ipsum available
+                      Pesanan Akan Dikirim Langsung Setelah Memesan
                    </p>
                 </div>
              </div>
@@ -212,10 +212,10 @@
                 </div>
                 <div class="detail-box">
                    <h5>
-                      Free Shiping
+                      Gratis Ongkir
                    </h5>
                    <p>
-                      variations of passages of Lorem Ipsum available
+                      Gratis Ongkir Untuk Wilayah Jabodetabek
                    </p>
                 </div>
              </div>
@@ -233,10 +233,10 @@
                 </div>
                 <div class="detail-box">
                    <h5>
-                      Best Quality
+                      Kualitas Terbaik
                    </h5>
                    <p>
-                      variations of passages of Lorem Ipsum available
+                      Kami Menyediakan Produk Dengan Kualitas Terbaik 
                    </p>
                 </div>
              </div>

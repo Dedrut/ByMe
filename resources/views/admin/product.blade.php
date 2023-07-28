@@ -48,32 +48,32 @@
                 </div>
                 @endif
                 <div class="div_center">
-                    <h1 class="font_size">Add Product</h1>
+                    <h1 class="font_size">Tambah Produk</h1>
 
                     <form action="{{ url('add_product') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="div_design">
-                            <label for="title">product title</label>
+                            <label for="title">Judul Produk</label>
                             <input class="text_color" required type="text" name="title" placeholder="Write a title">
                         </div>
                         <div class="div_design">
-                            <label for="description">product description</label>
+                            <label for="description">Deskripsi Produk</label>
                             <input class="text_color" required type="text" name="description" placeholder="Write a description">
                         </div>
                         <div class="div_design">
-                            <label for="price">product price</label>
+                            <label for="price">Harga Produk</label>
                             <input class="text_color" required type="number" name="price" placeholder="Write a price">
                         </div>
                         <div class="div_design">
-                            <label for="discountprice">discount price</label>
-                            <input class="text_color" type="text" name="discount_price" placeholder="Write a discountprice">
+                            <label for="discountprice">Harga Diskon</label>
+                            <input class="text_color" type="number" name="discount_price" placeholder="Write a discountprice">
                         </div>
                         <div class="div_design">
-                            <label for="quantity">product quantity</label>
-                            <input class="text_color" required type="text" name="quantity" placeholder="Write a quantity">
+                            <label for="quantity">Jumlah Produk</label>
+                            <input class="text_color" required type="number" name="quantity" placeholder="Write a quantity">
                         </div>
                         <div class="div_design">
-                            <label for="category">product category</label>
+                            <label for="category">Kategori Produk</label>
                             <select class="text_color" required="" name="category" id="">
                                 <option value="" selected="">Add category here</option>
                                 @foreach ($category as $category)

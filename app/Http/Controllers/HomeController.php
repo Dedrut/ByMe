@@ -6,12 +6,23 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Products;
+use App\Models\cart;
+use App\Models\order;
+use App\Models\comment;
+use App\Models\reply;
+use RealRashid\SweetAlert\Facades\Alert;
+use Session;
+use Stripe;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        return view('home.userpage');
+        $product = Products::paginate(3);
+        $comment = comment::orderby('id', 'desc')->get();
+        $reply = reply::all();
+        return view('home.userpage', compact('product', 'comment', 'reply'));
     }
 
     public function redirect()
@@ -19,9 +30,259 @@ class HomeController extends Controller
         $usertype = Auth::user()->usertype;
 
         if ($usertype == "1") {
-            return view("admin.home");
+            $total_product = products::all()->count();
+            $total_order = order::all()->count();
+            $total_user = user::all()->count();
+            $order = order::all();
+            $total_revenue = 0;
+
+            foreach ($order as $order) {
+                $total_revenue += $order->price;
+            }
+
+            $total_delivered = order::where('delivery_status', '=', 'delivered')->get()->count();
+            $total_processing = order::where('delivery_status', '=', 'processing')->get()->count();
+
+            return view("admin.home", compact('total_product', 'total_order', 'total_user', 'total_revenue', 'total_delivered', 'total_processing'));
         } else {
-            return view("home.userpage");
+            $product = Products::paginate(3);
+            $comment = comment::orderby('id', 'desc')->get();
+            $reply = reply::all();
+            return view('home.userpage', compact('product', 'comment', 'reply'));
         }
+    }
+
+    public function product_details($id)
+    {
+        $product = Products::find($id);
+        return view('home.product_details', compact('product'));
+    }
+
+    public function add_cart(Request $request, $id)
+    {
+        if (Auth::id()) {
+            $user = Auth::user();
+            $userid = $user->id;
+            $product = Products::find($id);
+            $product_exist_id = cart::where('product_id', '=', $id)->where('user_id', '=', $userid)->get('id')->first();
+            if ($product_exist_id) {
+                $cart = cart::find($product_exist_id)->first();
+                $quantity = $cart->quantity;
+                $cart->quantity = $quantity + $request->quantity;
+                if ($product->discount_price != null) {
+                    $cart->price = $product->discount_price * $cart->quantity;
+                } else {
+                    $cart->price = $product->price * $cart->quantity;
+                }
+                $cart->save();
+                return redirect()->back();
+            } else {
+                $cart = new cart;
+                $cart->name = $user->name;
+                $cart->email = $user->email;
+                $cart->phone = $user->phone;
+                $cart->address = $user->address;
+                $cart->user_id = $user->id;
+
+                if ($product->discount_price != null) {
+                    $cart->price = $product->discount_price * $request->quantity;
+                } else {
+                    $cart->price = $product->price * $request->quantity;
+                }
+                $cart->product_title = $product->title;
+                $cart->image = $product->image;
+                $cart->product_id = $product->id;
+                $cart->quantity = $request->quantity;
+
+                $cart->save();
+                Alert::success('Berhasil Menambahkan', 'Produk yang kamu pilih telah masuk ke dalam keranjang');
+                return redirect()->back();
+            }
+        } else {
+            return redirect('login');
+        }
+    }
+
+    public function show_cart()
+    {
+        if (Auth::id()) {
+
+            $id = Auth::user()->id;
+            $cart = cart::where('user_id', '=', $id)->get();
+            return view('home.showcart', compact('cart'));
+        } else {
+            return redirect('login');
+        }
+    }
+
+    public function remove_cart($id)
+    {
+        $cart = cart::find($id);
+        $cart->delete();
+        return redirect()->back();
+    }
+
+    public function cash_order()
+    {
+        $user = Auth::user();
+        $userid = $user->id;
+
+        $data = cart::where('user_id', '=', $userid)->get();
+
+        foreach ($data as $data) {
+            $order = new order;
+
+            $order->name = $data->name;
+            $order->email = $data->email;
+            $order->phone = $data->phone;
+            $order->address = $data->address;
+            $order->user_id = $data->user_id;
+            $order->product_title = $data->product_title;
+            $order->quantity = $data->quantity;
+            $order->price = $data->price;
+            $order->image = $data->image;
+            $order->product_id = $data->product_id;
+            $order->payment_status = 'Cash on delivery';
+            $order->delivery_status = 'Processing';
+
+            $order->save();
+
+            $cart_id = $data->id;
+            $cart = cart::find($cart_id);
+            $cart->delete();
+        }
+        return redirect()->back()->with('message', 'We have recieved you order. we will connect with you soon');
+    }
+
+    // Stripe Function
+    public function stripe($totalprice)
+    {
+        return view('home.stripe', compact('totalprice'));
+    }
+
+    public function stripePost(Request $request, $totalprice)
+    {
+        Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
+        Stripe\Charge::create([
+            "amount" => $totalprice * 100,
+            "currency" => "usd",
+            "source" => $request->stripeToken,
+            "description" => "Thanks for payment"
+        ]);
+
+        $user = Auth::user();
+        $userid = $user->id;
+
+        $data = cart::where('user_id', '=', $userid)->get();
+
+        foreach ($data as $data) {
+            $order = new order;
+
+            $order->name = $data->name;
+            $order->email = $data->email;
+            $order->phone = $data->phone;
+            $order->address = $data->address;
+            $order->user_id = $data->user_id;
+            $order->product_title = $data->product_title;
+            $order->quantity = $data->quantity;
+            $order->price = $data->price;
+            $order->image = $data->image;
+            $order->product_id = $data->product_id;
+            $order->payment_status = 'Paid';
+            $order->delivery_status = 'Processing';
+
+            $order->save();
+
+            $cart_id = $data->id;
+            $cart = cart::find($cart_id);
+            $cart->delete();
+        }
+
+        // Session::flash('success', 'Payment successful!');
+
+        return back();
+    }
+    // End stripe function
+
+
+    public function show_order()
+    {
+        if (Auth::id()) {
+            $user = Auth::user();
+            $userid = $user->id;
+
+            $order = order::where('user_id', '=', $userid)->get();
+            return view('home.order', compact('order'));
+        } else {
+            return redirect('login');
+        }
+    }
+
+    public function cancel_order($id)
+    {
+        $order = order::find($id);
+        $order->delivery_status = "Pemesanan Dibatalkan";
+        $order->save();
+
+        return redirect()->back();
+    }
+
+    public function add_comment(Request $request)
+    {
+        if (Auth::id()) {
+            $comment = new comment;
+            $comment->name = Auth::user()->name;
+            $comment->user_id = Auth::user()->id;
+            $comment->comment = $request->comment;
+            $comment->save();
+            return redirect()->back();
+        } else {
+
+            return redirect('login');
+        }
+    }
+
+    public function add_reply(Request $request)
+    {
+        if (Auth::id()) {
+            $reply = new reply;
+            $reply->name = Auth::user()->name;
+            $reply->user_id = Auth::user()->id;
+            $reply->comment_id = $request->commentId;
+            $reply->reply = $request->reply;
+            $reply->save();
+            return redirect()->back();
+        } else {
+            return redirect('login');
+        }
+    }
+    // Search Product
+    public function product_search(Request $request)
+    {
+        $search_text = $request->search;
+        $product = products::where('title', 'LIKE', "%$search_text%")->orWhere('category', 'LIKE', "$search_text")->paginate(10);
+        $comment = comment::orderby('id', 'desc')->get();
+        $reply = reply::all();
+
+        return view('home.userpage', compact('product', 'reply', 'comment'));
+    }
+
+    public function search_product(Request $request)
+    {
+        $search_text = $request->search;
+        $product = products::where('title', 'LIKE', "%$search_text%")->orWhere('category', 'LIKE', "$search_text")->paginate(10);
+        $comment = comment::orderby('id', 'desc')->get();
+        $reply = reply::all();
+
+        return view('home.all_product', compact('product', 'reply', 'comment'));
+    }
+    public function products()
+    // End Search Product
+    {
+        $product = Products::paginate(3);
+        $comment = comment::orderby('id', 'desc')->get();
+        $reply = reply::all();
+        return view('home.all_product', compact('product', 'comment', 'reply'));
     }
 }
